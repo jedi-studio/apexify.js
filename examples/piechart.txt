@@ -1,0 +1,67 @@
+/// Canvas background, grid and etc are optional. You only need to provide labels for x and y axis and data to draw.
+
+const data = {
+  data: [
+    { label: 'Category A', color: '#ff5733', value: 30, key: 'A' },
+    { label: 'Category B', color: '#33ff57', value: 20, key: 'B' },
+    { label: 'Category C', color: '#5733ff', value: 25, key: 'C' },
+    { label: 'Category D', color: '#ffff33', value: 15, key: 'D' },
+    { label: 'Category E', color: '#33ffff', value: 10, key: 'E' }
+  ],
+  pieConfig: {
+    pieData: {
+        x: -150,
+        y: 0,
+        stroke: {
+          color: 'white',
+          size: 2
+        },
+        boxes: {
+            colors: 'blue',
+            labelColor: 'black',
+            fontSize: 13,
+            labelDistance: 60,
+            width: 30,
+            height: 40
+        },
+        radius: 100,
+        title: {
+            text: 'Pie Chart',
+            color: 'black',
+            fontSize: 24,
+            x: -20,
+            y: -170
+        },
+    },
+    keyBox: {
+      bgcolor: '#ffffff',
+      width: 300,
+      height: 300,
+      radius: 20,
+      x: 800,
+      y: 50,
+      content: {
+        keyTitle: {
+            text: `Keys`,
+            fonstSize: 20,
+            x: 20,
+            y: 30,
+        },
+        keys: {
+            x: 20,
+            y: 30,
+            fontSize: 14,
+        }
+      }
+    },
+    canvas: {
+      width: 1200,
+      height: 400,
+      bgcolor: 'gray'
+    }
+  }
+};
+
+const { ApexPainter } = require('apexify.js');
+
+const buffer = await new ApexPainter().createChart(data, { chartType: 'pie', chartNumber: 1 });
