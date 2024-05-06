@@ -14,7 +14,6 @@ const data = {
     },
     bg: {
        image: 'https://png.pngtree.com/thumb_back/fh260/background/20211118/pngtree-financial-technology-data-graph-image_908921.jpg',
-       baseDir: __dirname,
        bgColor: 'darkgray'
       }, 
     grid: {
@@ -58,7 +57,6 @@ const data = {
             'blue': 'Label 3',
             'yellow': 'Lable 4'
         },
-        keyColor: '',
         xTitle: 'X Axis Title',
         yTitle: 'Y Axis Title',
         labelStyle: {

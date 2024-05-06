@@ -113,8 +113,8 @@ export interface TextObject {
     color?: string;
     maxWidth?: number;
     lineHeight?: number;
-    textAlign?: CanvasTextAlign;
-    textBaseline?: CanvasTextBaseline;
+    textAlign?: string | "end" | "center" | "left" | "right" | "start";
+    textBaseline?: string | "alphabetic" | "bottom" | "hanging" | "ideographic" | "middle" | "top";
     shadow?: {
         color?: string;
         offsetX?: number;
@@ -372,19 +372,26 @@ export interface LineChartConfig {
     yLabels: string[];
     fillArea: { color: string }[];
     lineColor: string[];
-    plot: {
+    plot?: {
         enable: boolean;
         color: string[];
         size: number;
     };
-    lineTension: number[];
-    grid: {
+    yaxisLabel?: {
+        label?: string;
+        x?: number;
+        y?: number; 
+        color?: string;
+        fontSize?: string;
+    };
+    lineTension?: number[];
+    grid?: {
         type: 'vertical' | 'horizontal' | 'both' | string;
         color: string;
         width: number;
     };
-    keys: { [color: string]: string };
-    keysConfig: {
+    keys?: { [color: string]: string };
+    keysConfig?: {
         radius?: number;
         keyPadding?: number;
         textPadding?: number;

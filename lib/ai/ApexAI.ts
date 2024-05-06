@@ -10,12 +10,11 @@ import {
   typeWriter,
   readImage,
 } from "./utils";
-import axios from "axios";
 import { 
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
-  ActionRowBuilder 
+  ActionRowBuilder
 } from "discord.js";
 import { filters } from "./buttons/tools";
 import { imageTools } from "./buttons/drawMenu";
@@ -386,7 +385,7 @@ export async function ApexAI (message: any, aiOptions: Options) {
           }
           }
         }
-        response = `${msgContent}, ${response}`
+        response = `${msgContent}${response}`
       if (msgType === 'reply') {
         if (typeWritingEnable) {
           if (response.length <= 2000) {
@@ -406,7 +405,6 @@ export async function ApexAI (message: any, aiOptions: Options) {
                 await typeWriter(message.channel, part, speed, delay);
               }
           }
-
       } else {
           if (response.length <= 2000) {
               await message.reply({
@@ -479,106 +477,139 @@ export async function ApexAI (message: any, aiOptions: Options) {
 }
 
 export async function gemmaAi_4(prompt: string) {
-    try {
-        const response = await axios.post('https://api-inference.huggingface.co/models/google/gemma-7b-it', { inputs: prompt }, {
-            headers: { 'Authorization': `Bearer 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` }
-        });
-        return response.data[0].generated_text;
-    } catch (error: any) {
-        console.error('Error fetching response:', error.message);
-        return null;
+  try {
+    const response = await fetch('https://api-inference.huggingface.co/models/google/gemma-7b-it', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer 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'
+        },
+        body: JSON.stringify({ inputs: prompt })
+    });
+
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
     }
+
+    const responseData = await response.json();
+    return responseData[0].generated_text;
+  } catch (error: any) {
+    console.error('Error fetching response:', error.message);
+    return null;
+  }
 }
 
 export async function gemmaAi_3(prompt: string) {
-    try {
-        const response = await axios.post('https://api-inference.huggingface.co/models/google/gemma-2b-it', { inputs: prompt }, {
-            headers: { 'Authorization': `Bearer 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` }
-        });
-        return response.data[0].generated_text;
-    } catch (error: any) {
-        console.error('Error fetching response:', error.message);
-        return null;
-    }
+  try {
+      const response = await fetch('https://api-inference.huggingface.co/models/google/gemma-2b-it', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer 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'
+          },
+          body: JSON.stringify({ inputs: prompt })
+      });
+
+      if (!response.ok) {
+          throw new Error('Network response was not ok');
+      }
+
+      const responseData = await response.json();
+      return responseData[0].generated_text;
+  } catch (error: any) {
+      console.error('Error fetching response:', error.message);
+      return null;
+  }
 }
-
 export async function apexai(prompt: string) {
-    try {
+  try {
       const messages = [
-        {"role": "user", "content": `${prompt}`}
+          {"role": "user", "content": `${prompt}`}
       ];
-        const formattedMessages = messages.map(message => `[${message.role}] ${message.content}`).join('\n');
+      const formattedMessages = messages.map(message => `[${message.role}] ${message.content}`).join('\n');
 
-        const response = await axios.post(`https://api-inference.huggingface.co/models/mistralai/Mixtral-8x7B-Instruct-v0.1`, {
-            inputs: formattedMessages
-        }, {
-            headers: {
-                'Authorization': `Bearer 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`,
-                'Content-Type': 'application/json'
-            }
-        });
+      const response = await fetch('https://api-inference.huggingface.co/models/mistralai/Mixtral-8x7B-Instruct-v0.1', {
+          method: 'POST',
+          headers: {
+              'Authorization': 'Bearer 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',
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ inputs: formattedMessages })
+      });
 
-        const generatedText = response.data[0].generated_text;
+      if (!response.ok) {
+          throw new Error('Network response was not ok');
+      }
 
-        const lines = generatedText.split('\n').slice(1);
+      const responseData = await response.json();
+      const generatedText = responseData[0].generated_text;
+      const lines = generatedText.split('\n').slice(1);
+      const output = lines.join('\n');
 
-        const output = lines.join('\n');
-
-     return output
-    } catch (error: any) {
-      console.error('Error:', error.response.data);
-      return 'Please wait i am on cooldown.'
-    }
+      return output;
+  } catch (error: any) {
+      console.error('Error:', error.message);
+      return 'Please wait i am on cooldown.';
+  }
 }
 
 export async function starChat(prompt: string) {
-  const messages = [{"role":"user","content": `${prompt}`}]
-  
-    try {
-        const response = await axios.post('https://api-inference.huggingface.co/models/HuggingFaceH4/starchat2-15b-v0.1', {
-            inputs: JSON.stringify(messages), 
-        }, {
-            headers: {
-                'Authorization': `Bearer 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`,
-            },
-        });
+  const messages = [{"role":"user","content": `${prompt}`}];
 
-        const chatbotReply = response.data[0];
-        const chatbotResponseText = chatbotReply.generated_text.replace(/^.*?\n.*?\n/, '');
-        const chatbotResponseArray = JSON.parse(chatbotResponseText);
-        const chatbotResponseString = chatbotResponseArray.join(' ');
+  try {
+      const response = await fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/starchat2-15b-v0.1', {
+          method: 'POST',
+          headers: {
+              'Authorization': 'Bearer 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',
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ inputs: messages })
+      });
 
-        return chatbotResponseString;
-    } catch (error: any) {
-        console.error('Error fetching response:', error.message);
-        return null;
-    }
+      if (!response.ok) {
+          throw new Error('Network response was not ok');
+      }
+
+      const responseData = await response.json();
+      const chatbotReply = responseData[0];
+      const chatbotResponseText = chatbotReply.generated_text.replace(/^.*?\n.*?\n/, '');
+      const chatbotResponseArray = JSON.parse(chatbotResponseText);
+      const chatbotResponseString = chatbotResponseArray.join(' ');
+
+      return chatbotResponseString;
+  } catch (error: any) {
+      console.error('Error:', error.message);
+      return null;
+  }
 }
 
 export async function zephyr_beta(prompt: string) {
+  const messages = [{"role":"user","content": `${prompt}` }];
 
-  const messages = [{"role":"user","content": `${prompt}` }]
-    try {
-        const response = await axios.post('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta', {
-            inputs: JSON.stringify(messages), 
-        }, {
-            headers: {
-                'Authorization': `Bearer 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`,
-            },
-        });
+  try {
+      const response = await fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta', {
+          method: 'POST',
+          headers: {
+              'Authorization': 'Bearer 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',
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ inputs: messages })
+      });
 
-        const chatbotReply = response.data[0];
+      if (!response.ok) {
+          throw new Error('Network response was not ok');
+      }
 
-        const textParts = chatbotReply.generated_text.split('\n');
+      const responseData = await response.json();
+      const chatbotReply = responseData[0];
+      const textParts = chatbotReply.generated_text.split('\n');
+      const secondArrayString = textParts[2];
+      const chatbotResponseArray = JSON.parse(secondArrayString);
+      const chatbotResponseString = chatbotResponseArray.map((obj: any) => obj.content).join(' ');
 
-        const secondArrayString = textParts[2];
-        const chatbotResponseArray = JSON.parse(secondArrayString);
-
-        const chatbotResponseString = chatbotResponseArray.map((obj: any) => obj.content).join(' ');
-
-        return chatbotResponseString;
-    } catch (error: any) {
-        console.error('Error fetching response:', error.message);
-        return null;
-    }
+      return chatbotResponseString;
+  } catch (error: any) {
+      console.error('Error:', error.message);
+      return null;
+  }
 }

@@ -5,7 +5,7 @@
 ### General Chnages
 
 - Documetation moved to [Apexify.js](http://apexify.jedi-studio.com)
-
+- Fixed minor bugs
 ### ApexAI Changes
 
 - Added custom nsfw key words filter.

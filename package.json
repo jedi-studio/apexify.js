@@ -1,6 +1,6 @@
 {
     "name": "apexify.js",
-    "version": "3.3.5",
+    "version": "3.3.6",
     "description": "Ai and Canvas library. Supports typescript and javascript",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
@@ -140,8 +140,8 @@
     "dependencies": {
         "@iamtraction/google-translate": "^2.0.1",
         "@napi-rs/canvas": "^0.1.51",
+        "apexify.js": "^3.3.6",
         "api": "^6.1.1",
-        "axios": "^1.6.7",
         "gifencoder": "^2.0.1",
         "hercai": "^12.2.0",
         "jimp": "^0.22.12",

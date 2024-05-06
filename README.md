@@ -6,22 +6,34 @@ Greetings everyone! 🌟 This marks the release of a beta version for our packag
 
 ## 🚀 Usage Guidelines
 
-### 🤖 Ai Chat & Imagine
+Sure, here's a more polished version:
 
-### 📸 Manipulating Images Using Canvas 🎨
+### 🤖 AI Chat & Imagine
 
-- Canvas Background configuration.
-- Canvas Images/shapes/custom drawing configuration.
-- Canvas Text: Adding text on background or image configuration.
-- Canvas Custom Drawing: Draw on canvas freely using lines and coordinates.
-- Canvas Filters: Color/Effects.
-- Canvas Gif: Creating Gif from set of images.
-- Canvas Resizing and Extention Converter for images.
-- Canvas Charts: Creating piechart/barcharts/linecharts using the given set of data.
-- Canvas Background Remover: Removes a background from images.
-- Canvas Colors Detector: Detect colors in an image.
-- Canvas Color Remover: Remove a specifc color from an image using rgb.
-- Canvas Image Croper: Cropping image freely and customizable.
+**Features:**
+
+- **Chat Bot:** Engage in conversations with an AI-powered chatbot.
+- **AI Chat Bot:** Experience advanced conversational capabilities with our state-of-the-art AI chatbot.
+- **Image Generator:** Generate images using cutting-edge AI algorithms.
+- **Image Analysis:** Analyze images with AI for insights and understanding.
+- **PDF & Text Reader:** Effortlessly extract text from PDF files or other documents.
+
+### 📸 Canvas Image Manipulation Toolkit 🎨
+
+**Features:**
+
+- **Background Configuration:** Customize canvas background settings.
+- **Image/Shapes/Custom Drawing:** Configure images, shapes, and custom drawings on the canvas.
+- **Text Addition:** Add text to backgrounds or images with configurable settings.
+- **Custom Drawing:** Freely draw on the canvas using lines and coordinates.
+- **Filters:** Apply color and effects filters to images.
+- **GIF Creation:** Generate GIFs from a series of images.
+- **Resizing and Format Conversion:** Resize images and convert between different file formats.
+- **Charts Generation:** Create pie charts, bar charts, and line charts using provided data.
+- **Background Removal:** Effortlessly remove backgrounds from images.
+- **Color Detection:** Detect colors within images.
+- **Color Removal:** Remove specific colors from images using RGB values.
+- **Image Cropping:** Crop images with flexibility and customization options.
 
 ## For Further Usage Of ApexPainter
 

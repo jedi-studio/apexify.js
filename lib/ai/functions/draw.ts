@@ -98,9 +98,6 @@ async function aiImagine(
       if (retriesLeft === 0) {
         throw error;
       }
-      console.error(
-        `Retry failed, ${retriesLeft} attempts left. Error: ${error.message}`,
-      );
       await new Promise((resolve) => setTimeout(resolve, retryInterval));
       return retry(fn, retriesLeft - 1);
     }
@@ -423,9 +420,7 @@ async function attemptImageCaptioning(imageUrl: string) {
       try {
         return await fetchData();
       } catch (error: any) {
-        console.error(
-          `Error fetching data (Retry ${retryCount + 1}): ${error.message}`,
-        );
+
         retryCount++;
       }
     }

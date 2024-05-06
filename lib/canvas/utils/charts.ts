@@ -8,7 +8,7 @@ import axios from 'axios';
 
 export async function verticalBarChart(data: barChart_1) {
     try {
-        const { chartData, xLabels, yLabels, data: { xAxis, yAxis, keys, keyColor, xTitle, yTitle, labelStyle } } = data;
+        const { chartData, xLabels, yLabels, data: { xAxis, yAxis, keys, xTitle, yTitle, labelStyle } } = data;
 
         if (!xLabels || !yLabels || !xAxis || !yAxis) {
             throw new Error('Required data is missing.');
@@ -362,11 +362,11 @@ export async function lineChart(data: { data: DataPoint[][], lineConfig: LineCha
     const ctx = canvas.getContext('2d');
 
     const xAxisLabels = data.data[0].map(point => point.label);
-    const yAxisLabel = 'Y Axis';
-    ctx.font = '16px Arial';
+    const yAxisLabel = data.lineConfig?.yaxisLabel?.label || 'Y Axis';
+    ctx.font = `${data.lineConfig?.yaxisLabel?.fontSize || 16} Arial`;
 
     if (data.lineConfig?.canvas?.image) { 
-        ctx.drawImage(img, 0, 0, 800, 600);
+        ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
     } else {
         ctx.fillStyle = data.lineConfig?.canvas?.bgColor || '#f0f0f0';
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
@@ -401,7 +401,8 @@ export async function lineChart(data: { data: DataPoint[][], lineConfig: LineCha
     ctx.save();
     ctx.translate(20, canvasHeight / 2);
     ctx.rotate(-Math.PI / 2);
-    ctx.fillText(yAxisLabel, 0, 0);
+    ctx.fillStyle = data.lineConfig?.yaxisLabel?.color || 'black'; 
+    ctx.fillText(yAxisLabel, data.lineConfig?.yaxisLabel?.y || 0, data.lineConfig?.yaxisLabel?.x || 0);
     ctx.restore();
 
     let maxY = 0;
@@ -423,7 +424,7 @@ export async function lineChart(data: { data: DataPoint[][], lineConfig: LineCha
         ctx.strokeStyle = lineConfig?.lineColor[index] || 'blue';
         ctx.lineWidth = 2;
 
-        const tension = lineConfig.lineTension[index] || 0.1;
+        const tension = (lineConfig && lineConfig.lineTension && lineConfig.lineTension[index]) || 0.1;
 
         line.forEach((point, index) => {
             const x = index * segmentWidth + 50;

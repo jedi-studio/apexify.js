@@ -58,7 +58,7 @@ export async function resizingImg(resizeOptions: any): Promise<any> {
 } catch (error) {
     console.error("Error resizing image:", error);
     throw new Error("Failed to resize image");
-}
+  }
 }
 
 export async function converter(imagePath: string, newExtension: string) {

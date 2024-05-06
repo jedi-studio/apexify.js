@@ -79,13 +79,11 @@ const data = {
            lineWidth: 3, 
         },
         canvas: {
-            bgColor: 'black',
             fontColor: 'white',
             fontSize: 16,
             width: 800,
             height: 600,
             image: 'image url or path if u dont want a bg color',
-            baseDir: __dirname // need to be added if u using a local path image
         }
     }
 };

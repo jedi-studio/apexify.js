@@ -1,4 +1,3 @@
-import axios from "axios";
 import * as path from "path";
 import * as fs from "fs";
 
@@ -15,10 +14,12 @@ const getLibraryVersion = function(library: string): string {
     return version;
 };
 
-axios
-    .get("https://registry.npmjs.com/-/v1/search?text=apexify.js")
-    .then(function(response: any) {
-        const version: string = response.data.objects[0]?.package?.version;
+fetch("https://registry.npmjs.com/-/v1/search?text=apexify.js")
+    .then(function(response: Response) {
+        return response.json();
+    })
+    .then(function(data: any) {
+        const version: string = data.objects[0]?.package?.version;
         if (version && getLibraryVersion("apexify.js") !== version) {
             console.error(CYAN +
                 "Error: Please update apexify.js to the latest version (" + version + ")." +
@@ -26,7 +27,6 @@ axios
         }
     })
     .catch(function(error: any) {});
-
 
 import { ApexAI, ApexChat, ApexImagine, ApexPainter } from "./utils";
 
