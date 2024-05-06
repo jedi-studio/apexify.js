@@ -1,7 +1,6 @@
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { barChart_1, bgConfig, DataItem, KeyBoxConfig, PieDataConfig, PieChartData, LineChartConfig, DataPoint } from "./types";
 import path from 'path';
-import axios from 'axios';
 
 
 ////////////////////////////////////////BAR CHARTS////////////////////////////////////////
@@ -33,15 +32,24 @@ export async function verticalBarChart(data: barChart_1) {
         const chartHeight = canvasHeight * (chartData?.heightPerc || 0.8); 
 
         if (chartData?.bg?.image) {
-            if (chartData.bg?.image.startsWith('http')) {
-                const response = await axios.get(chartData.bg?.image, { responseType: 'arraybuffer' });
-                img = await loadImage(Buffer.from(response.data, 'binary'));
-            } else {
-                const imagePath =path.join(process.cwd(), chartData.bg?.image);
-                img = await loadImage(imagePath);
-
+            try {
+                let img;
+                if (chartData.bg.image.startsWith('http')) {
+                    const response = await fetch(chartData.bg.image);
+                    if (!response.ok) {
+                        throw new Error("Failed to fetch image.");
+                    }
+                    const buffer = await response.arrayBuffer();
+                    img = await loadImage(Buffer.from(buffer));
+                } else {
+                    const imagePath = path.join(process.cwd(), chartData.bg.image);
+                    img = await loadImage(imagePath);
+                }
+            } catch (error) {
+                console.error('Error loading image:', error);
             }
         }
+        
         const canvas = createCanvas(800, 600);
         const ctx = canvas.getContext('2d');
 
@@ -347,16 +355,22 @@ export async function lineChart(data: { data: DataPoint[][], lineConfig: LineCha
 
     let img: any;
     if (data.lineConfig?.canvas?.image) {
-        if (data.lineConfig?.canvas?.image.startsWith('http')) {
-            const response = await axios.get(data.lineConfig?.canvas?.image, { responseType: 'arraybuffer' });
-            img = await loadImage(Buffer.from(response.data, 'binary'));
-        } else {
-            const imagePath = path.join(process.cwd(), data.lineConfig?.canvas?.image);
-            img = await loadImage(imagePath);
-
+        try {
+            if (data.lineConfig.canvas.image.startsWith('http')) {
+              const response = await fetch(data.lineConfig.canvas.image);
+                if (!response.ok) {
+                  throw new Error("Failed to fetch image.");
+                }
+              const buffer = await response.arrayBuffer();
+              img = await loadImage(Buffer.from(buffer));
+            } else {
+              const imagePath = path.join(process.cwd(), data.lineConfig.canvas.image);
+              img = await loadImage(imagePath);
+            }
+        } catch (error) {
+          console.error('Error loading image:', error);
         }
     }
-
 
     const canvas = createCanvas(canvasWidth, canvasHeight);
     const ctx = canvas.getContext('2d');

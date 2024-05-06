@@ -1,5 +1,4 @@
 import { createCanvas, loadImage, GlobalFonts } from "@napi-rs/canvas";
-import axios, { responseEncoding } from "axios";
 import path from 'path';
 import GIFEncoder from 'gifencoder';
 import { PassThrough, Writable} from 'stream'
@@ -11,54 +10,56 @@ import { CanvasConfig, TextObject, ImageProperties, ImageObject, GIFOptions, GIF
 import {  } from "./utils/general functions";
 
 export class ApexPainter {
-    async createCanvas(canvas: CanvasConfig): Promise<Buffer> {
-        let canvasWidth: number = canvas.width || 500;
-        let canvasHeight: number = canvas.height || 500;
-        let borderRadius: number | string = canvas.borderRadius || 0;
 
-        if (canvas.customBg) {
-            try {
-                const response = await axios.get(canvas.customBg, { responseType: 'arraybuffer' });
-                const imageBuffer = Buffer.from(response.data, 'binary');
-                const image = await loadImage(imageBuffer);
+  async createCanvas(canvas: CanvasConfig): Promise<Buffer> {
+    let canvasWidth: number = canvas.width || 500;
+    let canvasHeight: number = canvas.height || 500;
+    let borderRadius: number | string = canvas.borderRadius || 0;
 
-                canvasWidth = image.width;
-                canvasHeight = image.height;
-            } catch (error) {
-                console.error('Error loading custom background image:', error);
+    if (canvas.customBg) {
+        try {
+            const response = await fetch(canvas.customBg);
+            if (!response.ok) {
+                throw new Error("Failed to fetch background image.");
             }
+            const buffer = await response.arrayBuffer();
+            const image = await loadImage(Buffer.from(buffer));
+            canvasWidth = image.width;
+            canvasHeight = image.height;
+        } catch (error) {
+            console.error('Error loading custom background image:', error);
         }
-
-  
-   
-        const canvasInstance = createCanvas(canvasWidth, canvasHeight);
-        const ctx: any = canvasInstance.getContext('2d');
-
-        if (!ctx) {
-            throw new Error('Unable to get 2D rendering context from canvas');
-        }
-
-        applyRotation(ctx, canvas.rotation || 0, canvas.x || 0, canvas.y || 0, canvasWidth, canvasHeight);
-
-        applyShadow(ctx, canvas.shadow, canvas.x || 0, canvas.y || 0, canvasWidth, canvasHeight);
-
-        if (typeof borderRadius === 'string') {
-            circularBorder(ctx, canvasWidth, canvasHeight);
-        } else if (typeof borderRadius === 'number') {
-            radiusBorder(ctx, canvas.x || 0, canvas.y || 0, canvasWidth, canvasHeight, borderRadius);
-        }
-
-        if (canvas.customBg) {
-            await customBackground(ctx, canvas);
-        } else if (canvas.gradientBg) {
-            await drawBackgroundGradient(ctx, canvas);
-        } else {
-            await drawBackgroundColor(ctx, canvas);
-        }
-        applyStroke(ctx, canvas.stroke, canvas.x || 0, canvas.y || 0, canvasWidth, canvasHeight);
-
-        return canvasInstance.toBuffer('image/png');
     }
+
+    const canvasInstance = createCanvas(canvasWidth, canvasHeight);
+    const ctx: any = canvasInstance.getContext('2d');
+
+    if (!ctx) {
+        throw new Error('Unable to get 2D rendering context from canvas');
+    }
+
+    applyRotation(ctx, canvas.rotation || 0, canvas.x || 0, canvas.y || 0, canvasWidth, canvasHeight);
+
+    applyShadow(ctx, canvas.shadow, canvas.x || 0, canvas.y || 0, canvasWidth, canvasHeight);
+
+    if (typeof borderRadius === 'string') {
+        circularBorder(ctx, canvasWidth, canvasHeight);
+    } else if (typeof borderRadius === 'number') {
+        radiusBorder(ctx, canvas.x || 0, canvas.y || 0, canvasWidth, canvasHeight, borderRadius);
+    }
+
+    if (canvas.customBg) {
+        await customBackground(ctx, canvas);
+    } else if (canvas.gradientBg) {
+        await drawBackgroundGradient(ctx, canvas);
+    } else {
+        await drawBackgroundColor(ctx, canvas);
+    }
+
+    applyStroke(ctx, canvas.stroke, canvas.x || 0, canvas.y || 0, canvasWidth, canvasHeight);
+
+    return canvasInstance.toBuffer('image/png');
+  }
 
     async createImage(images: ImageProperties[], canvasBuffer: Buffer): Promise<Buffer> {
 
@@ -517,51 +518,45 @@ export class ApexPainter {
     }
 
     try {
+        let img: any;
+        const shapeNames = ['circle', 'square', 'triangle', 'pentagon', 'hexagon', 'heptagon', 'octagon', 'star', 'kite'];
+        const isShape = shapeNames.includes(source.toLowerCase());
 
-    let img: any;
-    const shapeNames = ['circle', 'square', 'triangle', 'pentagon', 'hexagon', 'heptagon', 'octagon', 'star', 'kite'];
-
-    const isShape = shapeNames.includes(source.toLowerCase());
-
-    if (source.startsWith('http')) {
-        const response = await axios.get(source, { responseType: 'arraybuffer' });
-        const imageBuffer = Buffer.from(response.data, 'binary');
-        img = await loadImage(imageBuffer);
-    } else if (isShape) {
-        drawShape(ctx, { source, x, y, width, height, rotation, borderRadius, stroke, shadow, isFilled, color, gradient });
-    } else {
-        const imagePath = path.join(process.cwd(), source);
-        try {
-            img = await loadImage(imagePath);
-        } catch (e: any) {
-            throw new Error(`Error loading image: ${e.message}`);
+        if (source.startsWith('http')) {
+            const response = await fetch(source);
+            if (!response.ok) {
+                throw new Error("Failed to fetch image.");
+            }
+            const buffer = await response.arrayBuffer();
+            img = await loadImage(Buffer.from(buffer));
+        } else if (isShape) {
+            drawShape(ctx, { source, x, y, width, height, rotation, borderRadius, stroke, shadow, isFilled, color, gradient });
+        } else {
+            const imagePath = path.join(process.cwd(), source);
+            try {
+                img = await loadImage(imagePath);
+            } catch (e: any) {
+                throw new Error(`Error loading image: ${e.message}`);
+            }
         }
+
+        if (img !== undefined) {
+            ctx.save();
+            applyRotation(ctx, rotation || 0, x, y, width, height);
+            applyShadow(ctx, shadow, x, y, width, height);
+            imageRadius(ctx, img, x, y, width, height, borderRadius || 0);
+            applyStroke(ctx, stroke, x, y, width, height);
+            ctx.restore();
+        } else {
+            if (!isShape) {
+                throw new Error('Invalid image source or shape name');
+            }
+        }
+    } catch (error: any) {
+        throw new Error(error.message);
     }
-
-    if (img !== undefined) {
-
-      ctx.save();
-
-      applyRotation(ctx, rotation || 0, x, y, width, height);
-
-      applyShadow(ctx, shadow, x, y, width, height);
-
-      imageRadius(ctx, img, x, y, width, height, borderRadius || 0);
- 
-      applyStroke(ctx, stroke, x, y, width, height);
-
-      ctx.restore();
-    } else {
-         if (!isShape) {
-           throw new Error('Invalid image source or shape name');
-        }
-      }
-
-    } catch (e: any) {
-      throw new Error(e.message)
-    } 
+  
   }
-
   public validHex(hexColor: string): any {
     const hexPattern = /^#[0-9a-fA-F]{6}$/;
     if (!hexPattern.test(hexColor)) {

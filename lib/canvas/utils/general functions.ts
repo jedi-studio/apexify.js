@@ -1,4 +1,3 @@
-import axios from 'axios';
 import path from 'path'
 import sharp from 'sharp';
 import { cropOptions } from './types';
@@ -6,24 +5,26 @@ import { createCanvas, loadImage } from '@napi-rs/canvas';
 import Jimp from 'jimp';
 
 export async function loadImages(imagePath: string) {
-    try {
-        if (!imagePath) {
-            throw new Error("Image path is required.");
-        }
+  try {
+      if (!imagePath) {
+          throw new Error("Image path is required.");
+      }
 
-        if (imagePath.startsWith("http")) {
-            const response = await axios.get<ArrayBuffer>(imagePath, {
-                responseType: "arraybuffer",
-            });
-            return sharp(response.data);
-        } else {
-            const absolutePath = path.join(process.cwd(), imagePath);
-            return sharp(absolutePath);
-        }
-    } catch (error) {
-        console.error("Error loading image:", error);
-        throw new Error("Failed to load image");
-    }
+      if (imagePath.startsWith("http")) {
+          const response = await fetch(imagePath);
+          if (!response.ok) {
+              throw new Error("Failed to fetch image.");
+          }
+          const buffer = await response.arrayBuffer();
+          return sharp(buffer);
+      } else {
+          const absolutePath = path.join(process.cwd(), imagePath);
+          return sharp(absolutePath);
+      }
+  } catch (error) {
+      console.error("Error loading image:", error);
+      throw new Error("Failed to load image");
+  }
 }
 
 export async function resizingImg(resizeOptions: any): Promise<any> { 
@@ -52,7 +53,7 @@ export async function resizingImg(resizeOptions: any): Promise<any> {
 
     ctx.drawImage(image, 0, 0, resizeOptions.size?.width || 500, resizeOptions.size?.height || 500);
 
-    const resizedBuffer = await canvas.toBuffer('image/png');
+    const resizedBuffer = canvas.toBuffer('image/png');
 
     return resizedBuffer;
 } catch (error) {
@@ -73,10 +74,12 @@ export async function converter(imagePath: string, newExtension: string) {
       let image: sharp.Sharp;
 
       if (imagePath.startsWith("http")) {
-          const response = await axios.get<ArrayBuffer>(imagePath, {
-              responseType: "arraybuffer",
-          });
-          image = sharp(Buffer.from(response.data));
+          const response = await fetch(imagePath);
+          if (!response.ok) {
+              throw new Error("Failed to fetch image.");
+          }
+          const buffer = await response.arrayBuffer();
+          image = sharp(Buffer.from(buffer));
       } else {
           if (!imagePath) {
               throw new Error("Image path is required.");
@@ -329,12 +332,16 @@ export async function detectColors(imagePath: string): Promise<{ color: string; 
   try {
       let image: any;
       if (imagePath.startsWith('http')) {
-          const response = await axios.get(imagePath, { responseType: 'arraybuffer' });
-          const buffer = Buffer.from(response.data, 'binary');
-          image = await loadImage(buffer);
+          const response = await fetch(imagePath);
+          if (!response.ok) {
+              throw new Error("Failed to fetch image.");
+          }
+          const buffer = await response.arrayBuffer();
+          image = await loadImage(Buffer.from(buffer));
       } else {
-        const localImagePath = path.join(process.cwd(), imagePath);
-        image = await loadImage(localImagePath);      }
+          const localImagePath = path.join(process.cwd(), imagePath);
+          image = await loadImage(localImagePath);
+      }
 
       const canvas = createCanvas(image.width, image.height);
       const ctx = canvas.getContext('2d') as any;
@@ -376,12 +383,16 @@ export async function removeColor(inputImagePath: string, colorToRemove: { red: 
   try {
       let image: any;
       if (inputImagePath.startsWith('http')) {
-          const response = await axios.get(inputImagePath, { responseType: 'arraybuffer' });
-          const buffer = Buffer.from(response.data, 'binary');
-          image = await loadImage(buffer);
+          const response = await fetch(inputImagePath);
+          if (!response.ok) {
+              throw new Error("Failed to fetch image.");
+          }
+          const buffer = await response.arrayBuffer();
+          image = await loadImage(Buffer.from(buffer));
       } else {
-        const localImagePath = path.join(process.cwd(), inputImagePath);
-        image = await loadImage(localImagePath);      }
+          const localImagePath = path.join(process.cwd(), inputImagePath);
+          image = await loadImage(localImagePath);
+      }
 
       const canvas = createCanvas(image.width, image.height);
       const ctx = canvas.getContext('2d') as any;
@@ -411,24 +422,31 @@ export async function removeColor(inputImagePath: string, colorToRemove: { red: 
 }
 
 export async function bgRemoval(imgURL: string, API_KEY: string): Promise<Buffer | undefined> {
-    try {
-     
+  try {
       if (!API_KEY) {
-        throw new Error("API_KEY is required. Please visit remove.bg, create an account, and obtain your API key at: https://accounts.kaleido.ai/users/sign_in#api-key");
+          throw new Error("API_KEY is required. Please visit remove.bg, create an account, and obtain your API key at: https://accounts.kaleido.ai/users/sign_in#api-key");
       }
-            const response = await axios.post('https://api.remove.bg/v1.0/removebg', {
-            image_url: imgURL,
-            size: 'auto'
-        }, {
-            headers: {
-                'X-Api-Key': API_KEY
-            },
-            responseType: 'arraybuffer'
-        });
 
-        return Buffer.from(response.data, 'binary');
-    } catch (error) {
-        console.error('Error:', error);
-        return undefined;
-    }
+      const response = await fetch('https://api.remove.bg/v1.0/removebg', {
+          method: 'POST',
+          headers: {
+              'X-Api-Key': API_KEY,
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+              image_url: imgURL,
+              size: 'auto'
+          }),
+      });
+
+      if (!response.ok) {
+          throw new Error("Failed to remove background.");
+      }
+
+      const buffer = await response.arrayBuffer();
+      return Buffer.from(buffer);
+  } catch (error) {
+      console.error('Error:', error);
+      return undefined;
+  }
 }

@@ -1,6 +1,5 @@
 import { loadImage } from "@napi-rs/canvas";
 import { CanvasConfig } from './types';
-import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 
@@ -58,8 +57,12 @@ export async function customBackground(ctx: any, canvas: CanvasConfig): Promise<
             let imagePath: string;
 
             if (canvas.customBg.startsWith('http')) {
-                const response = await axios.get(canvas.customBg, { responseType: 'arraybuffer' });
-                imageBuffer = Buffer.from(response.data, 'binary');
+                const response = await fetch(canvas.customBg);
+                if (!response.ok) {
+                    throw new Error("Failed to fetch custom background image.");
+                }
+                const buffer = await response.arrayBuffer();
+                imageBuffer = Buffer.from(buffer);
             } else {
                 imagePath = path.join(process.cwd(), canvas.customBg);
                 imageBuffer = fs.readFileSync(imagePath);
@@ -72,7 +75,7 @@ export async function customBackground(ctx: any, canvas: CanvasConfig): Promise<
 
             ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error loading custom background image:', error);
         }
     }
