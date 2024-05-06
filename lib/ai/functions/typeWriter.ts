@@ -1,5 +1,3 @@
-"use strict";
-
 export async function typeWriter(channel: any, sentence: string, speed: number, delay: number): Promise<void> {
     const typingMessage = await channel.send(sentence[0]);
     let typedSentence = typingMessage.content;

@@ -1,6 +1,5 @@
 import { Hercai } from "hercai";
-import translate  from "@iamtraction/google-translate";
-import axios from "axios";
+import translate from "@iamtraction/google-translate";
 import { createWorker, recognize } from "tesseract.js";
 import { chunkString } from "./chunkString";
 import { aiImagine } from "./draw";
@@ -8,7 +7,7 @@ import fs from "fs";
 
 const herc = new Hercai();
 let isProcessing = false;
-type ChatModelOption = "v3" | "v3-32k" | "turbo" | "turbo-16k" | "gemini" ;
+type ChatModelOption = "v3" | "v3-32k" | "turbo" | "turbo-16k" | "gemini";
 
 async function aiVoice(
   message: any,
@@ -68,20 +67,16 @@ async function aiVoice(
         setTimeout(async () => {
           const encodedChunk = encodeURIComponent(chunk);
           const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q=${encodedChunk}`;
-          const mp3Stream = await axios.get(url, {
-            responseType: "stream",
+          const response = await fetch(url, {
             headers: {
               Referer: "http://translate.google.com/",
               "User-Agent": "stagefright/1.2 (Linux;Android 5.0)",
             },
           });
+          const blob = await response.blob();
+          const file = new File([blob], "respond.mp3");
           await message.reply({
-            files: [
-              {
-                attachment: mp3Stream.data,
-                name: "respond.mp3",
-              },
-            ],
+            files: [file],
             allowedMentions: { repliedUser: false },
           });
         }, delay);
@@ -94,13 +89,12 @@ async function aiVoice(
 
       const options = {
         method: "POST",
-        url: "https://text-to-speech-neural-google.p.rapidapi.com/generateAudioFiles",
         headers: {
           "content-type": "application/json",
           "X-RapidAPI-Key": apiKey,
           "X-RapidAPI-Host": "text-to-speech-neural-google.p.rapidapi.com",
         },
-        data: {
+        body: JSON.stringify({
           audioFormat: "ogg",
           paragraphChunks: [msg],
           voiceParams: {
@@ -108,13 +102,13 @@ async function aiVoice(
             engine: "google",
             languageCode: "en-US",
           },
-        },
+        }),
       };
 
       try {
-        const response = await axios.request(options);
-        const audioData = response.data.audioStream;
-        fs.writeFileSync("output.ogg", Buffer.from(audioData, "base64"));
+        const response = await fetch("https://text-to-speech-neural-google.p.rapidapi.com/generateAudioFiles", options);
+        const audioData = await response.json();
+        fs.writeFileSync("output.ogg", Buffer.from(audioData.audioStream, "base64"));
         await message.reply({
           files: [
             {
@@ -142,19 +136,18 @@ async function aiVoice(
 
       const options = {
         method: "POST",
-        url: "https://cloudlabs-text-to-speech.p.rapidapi.com/synthesize",
         headers: {
           "content-type": "application/x-www-form-urlencoded",
           "X-RapidAPI-Key": apiKey,
           "X-RapidAPI-Host": "cloudlabs-text-to-speech.p.rapidapi.com",
         },
-        data: encodedParams,
+        body: encodedParams.toString(),
       };
 
       try {
-        const response = await axios.request(options);
-        const audioUrl = response.data.result.audio_url;
-        await message.reply(audioUrl, {
+        const response = await fetch("https://cloudlabs-text-to-speech.p.rapidapi.com/synthesize", options);
+        const { result: { audio_url } } = await response.json();
+        await message.reply(audio_url, {
           allowedMentions: { repliedUser: false },
         });
       } catch (error) {

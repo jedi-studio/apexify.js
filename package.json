@@ -1,6 +1,6 @@
 {
     "name": "apexify.js",
-    "version": "3.3.6",
+    "version": "3.3.7",
     "description": "Ai and Canvas library. Supports typescript and javascript",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",

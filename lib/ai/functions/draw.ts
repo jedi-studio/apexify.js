@@ -1,7 +1,6 @@
 import translate from "@iamtraction/google-translate";
 import sharp from "sharp";
 import { ButtonBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ButtonStyle, ActionRowBuilder, AttachmentBuilder, AttachmentData } from "discord.js";
-import axios from "axios";
 import api from "api";
 
 const sdk: any = api("@prodia/v1.3.0#be019b2kls0gqss3"); 
@@ -160,38 +159,45 @@ async function aiImagine(
       let buffferedImage: any;
 
       if (imageModel === "v3") {
-        const res = await retry(() =>
-          axios.get(response.url, {
-            responseType: "arraybuffer",
-          }),
-        );
-
+        const res = await retry(async () => {
+            const resp = await fetch(response.url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/octet-stream'
+                }
+            });
+            if (!resp.ok) {
+                throw new Error("Failed to fetch image data.");
+            }
+            return await resp.arrayBuffer();
+        });
+    
         await message.channel?.sendTyping();
-
-        buffferedImage = Buffer.from(res.data, "binary");
-
+    
+        buffferedImage = Buffer.from(res, "binary");
+    
         const resizedImage = await sharp(buffferedImage)
-          .resize({
-            width: 0x320,
-          })
-          .toBuffer();
-
+            .resize({
+                width: 0x320,
+            })
+            .toBuffer();
+    
         const attachment = {
-          file: resizedImage,
-          name: `image_${_0x4d7fb6 + 1}.png`,
+            file: resizedImage,
+            name: `image_${_0x4d7fb6 + 1}.png`,
         } as AttachmentData;
-
+    
         attachData.push(attachment);
-
+    
         const urlButton = new ButtonBuilder()
-          .setStyle(ButtonStyle.Link)
-          .setLabel(`Image ${_0x4d7fb6 + 1}`)
-          .setURL(response.url);
-
+            .setStyle(ButtonStyle.Link)
+            .setLabel(`Image ${_0x4d7fb6 + 1}`)
+            .setURL(response.url);
+    
         buttonsRow1.push(urlButton);
-
+    
         imageUrls.push(response.url);
-      } else {
+    } else {
         const imageUrl = response.url || response;
 
         await message.channel?.sendTyping();
@@ -386,49 +392,44 @@ async function checkJobStatus(jobId: number | string | any) {
 
 async function attemptImageCaptioning(imageUrl: string) {
   try {
-    let retryCount = 0;
-    const maxRetries = 3;
+      let retryCount = 0;
+      const maxRetries = 3;
 
-    const fetchData = async () => {
-      try {
-        const response = await axios.post(
-          `https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-base`,
-          { image: imageUrl },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer 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`,
-            },
-          },
-        );
+      const fetchData = async () => {
+          try {
+              const response = await fetch(`https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-base`, {
+                  method: 'POST',
+                  headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer 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`,
+                  },
+                  body: JSON.stringify({ image: imageUrl })
+              });
 
-        if (response.status === 200) {
-          return response.data[0].generated_text;
-        } else {
-          console.error(
-            `Failed to fetch image captioning API: ${response.statusText}`,
-          );
-          return null;
-        }
-      } catch (error: any) {
-        console.error(`Error fetching data: ${error.message}`);
-        throw error;
+              if (response.ok) {
+                  return await response.json();
+              } else {
+                  console.error(`Failed to fetch image captioning API: ${response.statusText}`);
+                  return null;
+              }
+          } catch (error: any) {
+              console.error(`Error fetching data: ${error.message}`);
+              throw error;
+          }
+      };
+
+      while (retryCount < maxRetries) {
+          try {
+              return await fetchData();
+          } catch (error: any) {
+              retryCount++;
+          }
       }
-    };
 
-    while (retryCount < maxRetries) {
-      try {
-        return await fetchData();
-      } catch (error: any) {
-
-        retryCount++;
-      }
-    }
-
-    return null;
+      return null;
   } catch (error: any) {
-    console.error(`Error in attemptImageCaptioning: ${error.message}`);
-    return null;
+      console.error(`Error in attemptImageCaptioning: ${error.message}`);
+      return null;
   }
 }
 

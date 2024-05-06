@@ -1,5 +1,3 @@
-import axios from "axios";
-
 export async function readImage(imageUrl: string) {
     try {
         let retryCount = 0;
@@ -7,15 +5,17 @@ export async function readImage(imageUrl: string) {
 
         const fetchData = async () => {
             try {
-                const response = await axios.post("https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large", { image: imageUrl }, {
+                const response = await fetch("https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large", {
+                    method: 'POST',
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: "Bearer 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",
                     },
+                    body: JSON.stringify({ image: imageUrl })
                 });
 
-                if (response.status === 200) {
-                    return response.data[0].generated_text;
+                if (response.ok) {
+                    return await response.json();
                 } else {
                     return null;
                 }
@@ -27,7 +27,7 @@ export async function readImage(imageUrl: string) {
         while (retryCount < maxRetries) {
             try {
                 return await fetchData();
-            } catch (error: any) {
+            } catch (error) {
                 retryCount++;
                 console.error(`Error fetching data (Retry ${retryCount}): ${error}`);
             }
